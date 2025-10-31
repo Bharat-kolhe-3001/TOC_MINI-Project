@@ -1,0 +1,578 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Lexical Analyzer - Real-time Tokenization</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .panel h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #bdc3c7;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            resize: vertical;
+            background: #2c3e50;
+            color: #ecf0f1;
+            line-height: 1.5;
+        }
+
+        .code-editor:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .token-display {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .token {
+            display: inline-block;
+            padding: 8px 15px;
+            margin: 5px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .token:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .token-identifier { background: #e74c3c; }
+        .token-number { background: #3498db; }
+        .token-keyword { background: #9b59b6; }
+        .token-operator { background: #f39c12; }
+        .token-error { background: #c0392b; }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .live-info {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .highlight {
+            background: #f39c12;
+            color: #2c3e50;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+
+        .pipeline {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .pipeline-step {
+            text-align: center;
+            flex: 1;
+            padding: 15px;
+            background: white;
+            margin: 0 5px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #3498db;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-weight: bold;
+        }
+
+        .typing-indicator {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .token-info {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .regex-examples {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-top: 15px;
+        }
+
+        .regex-example {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border-left: 3px solid #3498db;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .pipeline {
+                flex-direction: column;
+            }
+            
+            .pipeline-step {
+                margin: 5px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Dynamic Lexical Analyzer</h1>
+            <div class="subtitle">Real-time RE → NFA → DFA Pipeline Visualization</div>
+        </header>
+
+        <div class="pipeline">
+            <div class="pipeline-step">
+                <div class="step-number">1</div>
+                <h4>Type Code</h4>
+                <p>Write code in the editor</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">2</div>
+                <h4>RE Processing</h4>
+                <p>Patterns matched in real-time</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">3</div>
+                <h4>DFA Simulation</h4>
+                <p>Automata processes input</p>
+            </div>
+            <div class="pipeline-step">
+                <div class="step-number">4</div>
+                <h4>Token Output</h4>
+                <p>See instant results</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <!-- Left Panel: Code Input -->
+            <div class="panel">
+                <h2>Code Editor <span class="typing-indicator">LIVE</span></h2>
+                <p>Type your code below and see real-time tokenization:</p>
+                
+                <textarea 
+                    class="code-editor" 
+                    id="codeInput" 
+                    placeholder="Start typing your code here... Example: if x >= 10 else y = 20"
+                    oninput="tokenizeCode()"
+                    onkeyup="tokenizeCode()"
+                    onchange="tokenizeCode()"
+                >if x >= 10 else y = 20
+while i < 100
+a + b * c / d</textarea>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="charCount">0</div>
+                        <div>Characters</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="lineCount">1</div>
+                        <div>Lines</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="tokenCount">0</div>
+                        <div>Tokens</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="errorCount">0</div>
+                        <div>Errors</div>
+                    </div>
+                </div>
+
+                <div class="live-info">
+                    <h4>Live Information</h4>
+                    <p>Cursor Position: <span class="highlight" id="cursorPos">Line 1, Col 1</span></p>
+                    <p>Last Token: <span class="highlight" id="lastToken">None</span></p>
+                    <p>Status: <span class="highlight" id="status">Ready</span></p>
+                </div>
+            </div>
+
+            <!-- Right Panel: Token Output -->
+            <div class="panel">
+                <h2>Tokenized Output</h2>
+                <p>Real-time tokens from your code:</p>
+                
+                <div class="token-display" id="tokenOutput">
+                    <div style="text-align: center; padding: 50px; color: #7f8c8d;">
+                        <h3>Start typing to see tokens...</h3>
+                        <p>Tokens will appear here as you type</p>
+                    </div>
+                </div>
+
+                <div class="token-info" id="tokenInfo">
+                    <h4>Token Information</h4>
+                    <p>Hover over any token to see details</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Panel: Regular Expression Examples -->
+        <div style="padding: 0 30px 30px;">
+            <div class="panel">
+                <h2>Token Patterns & Examples</h2>
+                <div class="regex-examples">
+                    <div class="regex-example">
+                        <strong>Identifiers:</strong> <code>[a-zA-Z_][a-zA-Z0-9_]*</code>
+                        <br><small>Examples: <span class="token token-identifier">variable</span>, <span class="token token-identifier">x</span>, <span class="token token-identifier">my_var123</span></small>
+                    </div>
+                    <div class="regex-example">
+                        <strong>Numbers:</strong> <code>[0-9]+</code>
+                        <br><small>Examples: <span class="token token-number">42</span>, <span class="token token-number">100</span>, <span class="token token-number">0</span></small>
+                    </div>
+                    <div class="regex-example">
+                        <strong>Keywords:</strong> <code>if|else|while|for</code>
+                        <br><small>Examples: <span class="token token-keyword">if</span>, <span class="token token-keyword">else</span>, <span class="token token-keyword">while</span></small>
+                    </div>
+                    <div class="regex-example">
+                        <strong>Operators:</strong> <code>[+\-*/=<>]|==|!=|<=|>=</code>
+                        <br><small>Examples: <span class="token token-operator">+</span>, <span class="token token-operator">==</span>, <span class="token token-operator">>=</span></small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Token types and their colors
+        const tokenTypes = {
+            'IDENTIFIER': 'token-identifier',
+            'NUMBER': 'token-number', 
+            'KEYWORD': 'token-keyword',
+            'OPERATOR': 'token-operator',
+            'ERROR': 'token-error'
+        };
+
+        // Simple JavaScript tokenizer (for demonstration)
+        // In a real implementation, this would use the actual DFA
+        function simpleTokenize(code) {
+            const tokens = [];
+            let pos = 0;
+            const keywords = ['if', 'else', 'while', 'for'];
+            
+            // Simple regex patterns for tokenization
+            const patterns = [
+                { regex: /^\s+/, type: null }, // whitespace
+                { regex: /^[a-zA-Z_][a-zA-Z0-9_]*/, type: 'IDENTIFIER' },
+                { regex: /^\d+/, type: 'NUMBER' },
+                { regex: /^==|^!=|^<=|^>=/, type: 'OPERATOR' },
+                { regex: /^[+\-*/=<>]/, type: 'OPERATOR' }
+            ];
+            
+            while (pos < code.length) {
+                let matched = false;
+                
+                for (const pattern of patterns) {
+                    const match = code.slice(pos).match(pattern.regex);
+                    if (match) {
+                        const value = match[0];
+                        if (pattern.type) {
+                            let finalType = pattern.type;
+                            // Check if identifier is actually a keyword
+                            if (finalType === 'IDENTIFIER' && keywords.includes(value)) {
+                                finalType = 'KEYWORD';
+                            }
+                            tokens.push({
+                                type: finalType,
+                                value: value,
+                                position: pos
+                            });
+                        }
+                        pos += value.length;
+                        matched = true;
+                        break;
+                    }
+                }
+                
+                if (!matched) {
+                    // No pattern matched - treat as error
+                    tokens.push({
+                        type: 'ERROR',
+                        value: code[pos],
+                        position: pos
+                    });
+                    pos++;
+                }
+            }
+            
+            return tokens;
+        }
+
+        // Main tokenization function
+        function tokenizeCode() {
+            const codeInput = document.getElementById('codeInput');
+            const tokenOutput = document.getElementById('tokenOutput');
+            const charCount = document.getElementById('charCount');
+            const lineCount = document.getElementById('lineCount');
+            const tokenCount = document.getElementById('tokenCount');
+            const errorCount = document.getElementById('errorCount');
+            const cursorPos = document.getElementById('cursorPos');
+            const lastToken = document.getElementById('lastToken');
+            const status = document.getElementById('status');
+            
+            const code = codeInput.value;
+            
+            // Update basic stats
+            charCount.textContent = code.length;
+lineCount.textContent = code.split('\n').length;
+
+const lines = code.substr(0, codeInput.selectionStart).split('\n');
+
+            const line = lines.length;
+            const column = lines[lines.length - 1].length + 1;
+            cursorPos.textContent = `Line ${line}, Col ${column}`;
+            
+            // Tokenize the code
+            const tokens = simpleTokenize(code);
+            
+            // Update token display
+            tokenOutput.innerHTML = '';
+            
+            if (tokens.length === 0) {
+                tokenOutput.innerHTML = '<div style="text-align: center; padding: 50px; color: #7f8c8d;"><h3>No tokens found</h3><p>Start typing to see tokens</p></div>';
+            } else {
+                tokens.forEach((token, index) => {
+                    const tokenElement = document.createElement('span');
+                    tokenElement.className = `token ${tokenTypes[token.type] || 'token-error'}`;
+                    tokenElement.textContent = `${token.type}: '${token.value}'`;
+                    tokenElement.title = `Position: ${token.position}, Type: ${token.type}`;
+                    
+                    // Add click/hover effects
+                    tokenElement.addEventListener('mouseenter', function() {
+                        document.getElementById('tokenInfo').innerHTML = `
+                            <h4>Token Details</h4>
+                            <p><strong>Type:</strong> ${token.type}</p>
+                            <p><strong>Value:</strong> "${token.value}"</p>
+                            <p><strong>Position:</strong> ${token.position}</p>
+                            <p><strong>Length:</strong> ${token.value.length}</p>
+                        `;
+                    });
+                    
+                    tokenOutput.appendChild(tokenElement);
+                });
+            }
+            
+            // Update statistics
+            tokenCount.textContent = tokens.length;
+            const errors = tokens.filter(t => t.type === 'ERROR').length;
+            errorCount.textContent = errors;
+            
+            // Update last token and status
+            if (tokens.length > 0) {
+                const last = tokens[tokens.length - 1];
+                lastToken.textContent = `${last.type}: "${last.value}"`;
+            } else {
+                lastToken.textContent = 'None';
+            }
+            
+            // Update status
+            if (errors > 0) {
+                status.textContent = `${errors} error(s) found`;
+                status.style.background = '#e74c3c';
+            } else if (tokens.length > 0) {
+                status.textContent = 'All tokens valid';
+                status.style.background = '#27ae60';
+            } else {
+                status.textContent = 'Ready';
+                status.style.background = '#3498db';
+            }
+            
+            // Add typing animation
+            status.classList.add('typing-indicator');
+            setTimeout(() => {
+                status.classList.remove('typing-indicator');
+            }, 500);
+        }
+
+        // Initialize with example code
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up initial tokenization
+            setTimeout(tokenizeCode, 100);
+            
+            // Add auto-resize to textarea
+            const textarea = document.getElementById('codeInput');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            // Add keyboard shortcuts
+            textarea.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    if (e.key === 'Enter') {
+                        tokenizeCode();
+                        e.preventDefault();
+                    }
+                }
+            });
+            
+            // Add example insertion buttons
+           const examples = [
+    { name: 'If-Else', code: 'if x >= 10 else y = 20' },
+    { name: 'While Loop', code: 'while i < 100\nx = x + 1' },
+    { name: 'Math', code: 'a + b * c / d - e' },
+    { name: 'Variables', code: 'x = 42\ny = x + 10' }
+];
+
+            
+            const exampleContainer = document.createElement('div');
+            exampleContainer.style.marginTop = '15px';
+            exampleContainer.innerHTML = '<strong>Quick Examples: </strong>';
+            
+            examples.forEach(example => {
+                const button = document.createElement('button');
+                button.textContent = example.name;
+                button.style.margin = '0 5px 5px 0';
+                button.style.padding = '5px 10px';
+                button.style.background = '#3498db';
+                button.style.color = 'white';
+                button.style.border = 'none';
+                button.style.borderRadius = '3px';
+                button.style.cursor = 'pointer';
+                
+                button.addEventListener('click', function() {
+                    document.getElementById('codeInput').value = example.code;
+                    tokenizeCode();
+                });
+                
+                exampleContainer.appendChild(button);
+            });
+            
+            document.querySelector('.panel h2').parentNode.insertBefore(exampleContainer, document.querySelector('.code-editor').nextSibling);
+        });
+
+        // Auto-tokenize on load and periodically
+        setInterval(tokenizeCode, 1000);
+    </script>
+</body>
+</html>
+    
