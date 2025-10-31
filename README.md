@@ -1,9 +1,41 @@
-# 🧩 Dynamic Lexical Analyzer - Real-time Tokenization  
+<h1 align="center">🧩 Dynamic Lexical Analyzer – TOC Mini Project</h1>
 
-![Project Banner](https://user-images.githubusercontent.com/your-username/dynamic-lexical-analyzer-banner.png)  
+<p align="center">
+  <strong>Developed by Bharat Kolhe And Team</strong><br>
+  <em>Under the subject: Theory of Computation (TOC)</em><br>
+  📚 Sanjivani College of Engineering
+</p>
 
-This mini project **Dynamic Lexical Analyzer** is developed by *Bharat Kolhe* as part of the **Theory of Computation (TOC)** subject. It demonstrates the process of **Lexical Analysis (RE → NFA → DFA)** in real time using **HTML, CSS, and JavaScript**. The project allows users to type any code and see instant **tokenization results**, identifying **identifiers, keywords, numbers, operators, and errors** dynamically with a visually interactive interface. It also provides **live statistics** such as character count, token count, and errors, along with a **pipeline visualization** showing how the lexical analysis process works. To use it, simply **download or clone the repository**, open `index.html` in your browser, and start typing your code — tokens will appear instantly in the output panel. Example input like `if x >= 10 else y = 20` generates tokens such as **KEYWORD (if)**, **IDENTIFIER (x)**, and **OPERATOR (>=)**. Below is a preview of the running project:  
+---
 
-![Output Screenshot](./output.png)  
+## 🧠 Project Overview
 
-📘 *Developed by Bharat Kolhe, Computer Engineering Student — “Turning Theory into Visual Reality.”*
+The **Dynamic Lexical Analyzer** is a mini project that demonstrates how a **Lexical Analyzer** (an essential part of a compiler) works.  
+It helps visualize the **conversion of Regular Expression → NFA → DFA → Tokens** in an easy and interactive way.  
+This project takes input code and breaks it down into **tokens** such as keywords, identifiers, numbers, and operators — all in **real-time** using simple **HTML, CSS, and JavaScript**.
+
+---
+
+## 🎯 Objective
+
+To provide a **clear and visual understanding** of how lexical analysis processes input text into valid tokens using **Automata Theory concepts**.  
+It’s a bridge between **theoretical knowledge** and **practical understanding** for students learning compiler design.
+
+---
+
+## 🚀 Features
+
+✅ Real-time token generation  
+✅ Highlights keywords, identifiers, and numbers  
+✅ Detects invalid or unknown symbols  
+✅ Displays live statistics (line, token, and character count)  
+✅ Color-coded output for better visualization  
+✅ Simple user-friendly interface built with web technologies  
+
+---
+
+## 🧮 Example Demonstration
+
+**Input:**
+```text
+if x >= 10 else y = 20
