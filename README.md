@@ -34,7 +34,7 @@ It’s a bridge between **theoretical knowledge** and **practical understanding*
 
 ---
 
-## 🧮 Example Demonstration
+## 🧮 Example for  Demonstration
 
 **Input:**
 ```text
